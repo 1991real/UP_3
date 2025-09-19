@@ -68,7 +68,7 @@ export default function Bin() {
 
       const data = await res.json();
       if (res.ok) {
-        loadBin(); // refresh bin after decrement
+        loadBin();
       } else {
         setError(data.error || "Failed to update bin");
       }

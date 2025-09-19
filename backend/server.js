@@ -21,18 +21,15 @@ const config = {
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Test connection function
 async function connectDB() {
   try {
     let pool = await sql.connect(config);
     let result = await pool.request().query("SELECT TOP 10 * FROM Roles");
     return pool
-    // ❌ don't call sql.close() here
   } catch (err) {
     console.error("SQL error", err);
   }
@@ -65,10 +62,9 @@ app.post("/register", async (req, res) => {
     res.status(500).json({ error: "Database error", details: err.message });
   }
 });
-// GET /bin
 app.get("/bin", async (req, res) => {
   try {
-    const { username, password } = req.query; // sent as query params
+    const { username, password } = req.query;
 
     if (username == null || password == null) {
       return res.status(400).json({ error: "Missing username or password" });
@@ -76,7 +72,6 @@ app.get("/bin", async (req, res) => {
 
     let pool = await sql.connect(config);
 
-    // 1. Find user by username
     const userResult = await pool.request()
       .input("username", sql.VarChar(30), username)
       .query("SELECT ID_user, Password FROM Users WHERE UserName = @username");
@@ -87,14 +82,12 @@ app.get("/bin", async (req, res) => {
 
     const user = userResult.recordset[0];
 
-    // 2. Validate password
     if (user.Password !== password) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
     const userId = user.ID_user;
 
-    // 3. Get bin with joined service info
     const binResult = await pool.request()
       .input("userId", sql.Int, userId)
       .query(`
@@ -122,7 +115,6 @@ app.post("/bin/decrement", async (req, res) => {
   try {
     let pool = await sql.connect(config);
 
-    // get user id
     let user = await pool
       .request()
       .input("username", sql.VarChar, username)
@@ -137,7 +129,6 @@ app.post("/bin/decrement", async (req, res) => {
 
     const userId = user.recordset[0].ID_user;
 
-    // check current amount
     let existing = await pool
       .request()
       .input("userId", sql.Int, userId)
@@ -186,7 +177,6 @@ app.post("/login", async (req, res) => {
 
     let pool = await sql.connect(config);
 
-    // find user by username
     const result = await pool.request()
       .input("username", sql.VarChar(30), username)
       .query(`
@@ -199,12 +189,10 @@ app.post("/login", async (req, res) => {
 
     const user = result.recordset[0];
 
-    // check password
     if (user.Password !== password) {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
-    // if ok
     res.json({
       message: "✅ Login successful!",
       user: {
@@ -234,8 +222,6 @@ app.post("/bin/add", async (req, res) => {
 
   try {
     let pool = await sql.connect(config);
-
-    // 1. Get user by username & password
     const userResult = await pool
       .request()
       .input("username", sql.VarChar, username)
@@ -251,7 +237,6 @@ app.post("/bin/add", async (req, res) => {
 
     const userId = userResult.recordset[0].ID_user;
 
-    // 2. Check if service already exists in bin
     const check = await pool
       .request()
       .input("userId", sql.Int, userId)
@@ -262,7 +247,7 @@ app.post("/bin/add", async (req, res) => {
       `);
 
     if (check.recordset.length > 0) {
-      // 3. Increment Amount
+
       await pool
         .request()
         .input("userId", sql.Int, userId)
@@ -275,7 +260,6 @@ app.post("/bin/add", async (req, res) => {
 
       return res.json({ message: "Amount incremented" });
     } else {
-      // 4. Insert new
       await pool
         .request()
         .input("userId", sql.Int, userId)

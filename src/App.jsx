@@ -21,7 +21,6 @@ function App() {
           setIsLoggedIn(true);
         }
       } catch {
-        // invalid data in storage
         setIsLoggedIn(false);
       }
     }

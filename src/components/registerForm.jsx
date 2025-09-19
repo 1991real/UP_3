@@ -25,7 +25,6 @@ function RegisterForm() {
       const data = await res.json();
 
       if (res.ok) {
-        // ✅ Save user info to localStorage
         localStorage.setItem("user", JSON.stringify(data.received));
         alert("Registration successful!");
       } else {
